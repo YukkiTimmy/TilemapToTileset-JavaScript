@@ -13,9 +13,23 @@ onmessage = function(event) {
     });
 };
 
+
+class Tile {
+    constructor(id, tileData) {
+        this.id = id;
+        this.tileData = tileData;
+
+        this.amount = 1;
+
+        this.north = [];
+        this.east = [];
+        this.south = [];
+        this.west = [];
+    };
+}
+
 function computeTileMap(loadedImage, tileWidth, tileHeight) {
     let unique_tiles = [];
-    let tile_hashes = [];
 
     const canvas = new OffscreenCanvas(loadedImage.width, loadedImage.height);
     const ctx = canvas.getContext('2d');
@@ -31,19 +45,21 @@ function computeTileMap(loadedImage, tileWidth, tileHeight) {
             const tileData = getTileData(pixels, loadedImage.width, x * tileWidth, y * tileHeight, tileWidth, tileHeight);
 
             let isUnique = true;
-            for (let i = 0; i < unique_tiles.length; i++) {
-                if (compareTiles(unique_tiles[i], tileData)) {
+            for (const [i, tile] of unique_tiles.entries()) {
+                if (compareTiles(tile.tileData, tileData)) {
                     isUnique = false;
+                    unique_tiles[i].amount++;
                     break;
                 }
             }
 
-            if (isUnique) {
-                unique_tiles.push(tileData);
-            }
+            if (isUnique) unique_tiles.push(new Tile(unique_tiles.length, tileData));
+
         }
     }
 
+
+    console.log(unique_tiles);
     return unique_tiles;
 }
 

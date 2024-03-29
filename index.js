@@ -47,13 +47,13 @@ function startTiling(image) {
     unique_tiles.forEach((tile, index) => {
         const tileX = (index % tilesPerRow) * tileWidth;
         const tileY = Math.floor(index / tilesPerRow) * tileHeight;
-        const tileImageData = new ImageData(tile, tileWidth, tileHeight);
+        const tileImageData = new ImageData(tile.tileData, tileWidth, tileHeight);
         ctx.putImageData(tileImageData, tileX, tileY);
     });
 
     // Das Canvas-Element in ein Bild umwandeln
     const imageURL = tempCanvas.toDataURL();
-    const img = new Image();
+    //const img = new Image();
     outputImageContainer.src = imageURL;
 };
 
