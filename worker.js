@@ -28,6 +28,10 @@ class Tile {
     };
 }
 
+
+const dirX = [0, 1, 0, -1];
+const dirY = [-1, 0, 1, 0];
+
 function computeTileMap(loadedImage, tileWidth, tileHeight) {
     let unique_tiles = [];
 
@@ -40,25 +44,91 @@ function computeTileMap(loadedImage, tileWidth, tileHeight) {
     const rows = Math.floor(loadedImage.width / tileWidth);
     const cols = Math.floor(loadedImage.height / tileHeight);
 
+    let count = 0;
+
+
+    // go through every tile in the Tilemap
     for (let y = 0; y < cols; y++) {
         for (let x = 0; x < rows; x++) {
             const tileData = getTileData(pixels, loadedImage.width, x * tileWidth, y * tileHeight, tileWidth, tileHeight);
 
+            let currentTile = null;
+
+            // Check if the tile i unique
             let isUnique = true;
             for (const [i, tile] of unique_tiles.entries()) {
                 if (compareTiles(tile.tileData, tileData)) {
                     isUnique = false;
                     unique_tiles[i].amount++;
+                    currentTile = unique_tiles[i];
                     break;
                 }
             }
 
-            if (isUnique) unique_tiles.push(new Tile(unique_tiles.length, tileData));
+            // Add it to the list of tiles if it is unique
+            if (isUnique) {
+                currentTile = new Tile(unique_tiles.length, tileData);
+                unique_tiles.push(currentTile);
+            }
 
+            // Check every neighbouring tile and add them to the tile 
+            for (let d = 0; d < 4; d++) {
+                let dx = x + dirX[d];
+                let dy = y + dirY[d];
+
+                if (dx < 0 ||
+                    dx >= rows ||
+                    dy < 0 ||
+                    dy >= cols) continue;
+                                
+                const touchingTileData = getTileData(pixels, loadedImage.width, dx * tileWidth, dy * tileHeight, tileWidth, tileHeight);
+
+                isUnique = true;
+                let neighbouringTile = null;
+
+                // Check if the neighbour is already in the list of unique tiles
+                for (const [i, tile] of unique_tiles.entries()) 
+                {
+                    neighbouringTile = tile;
+                    if (compareTiles(tile.tileData, touchingTileData)) {
+                        isUnique = false;
+                        break;
+                    }  
+                }
+
+
+                // if it is a new Tile, add it to the unique list and the direction lists
+                if (isUnique) {
+                    let newTile = new Tile(unique_tiles.length, touchingTileData);
+                    unique_tiles.push(newTile);
+                    
+                    if (d == 0) currentTile.north.push(newTile);
+                    else if (d == 1) currentTile.east.push(newTile);
+                    else if (d == 2) currentTile.south.push(newTile);
+                    else if (d == 3) currentTile.west.push(newTile); 
+                    newTile.amount--; // account for amount calculation above
+                } else {
+                    // if its not a unique tile, add it to the direction lists
+                    let isAlreadyInList;
+                    if (d == 0) isAlreadyInList = currentTile.north.find(tile => tile.id === neighbouringTile.id) !== undefined;
+                    else if (d == 1) isAlreadyInList = currentTile.east.find(tile => tile.id === neighbouringTile.id) !== undefined;
+                    else if (d == 2) isAlreadyInList = currentTile.south.find(tile => tile.id === neighbouringTile.id) !== undefined;
+                    else if (d == 3) isAlreadyInList = currentTile.west.find(tile => tile.id === neighbouringTile.id) !== undefined;
+
+                    if (!isAlreadyInList) {
+                        if (d == 0) currentTile.north.push(neighbouringTile);
+                        else if (d == 1) currentTile.east.push(neighbouringTile);
+                        else if (d == 2) currentTile.south.push(neighbouringTile);
+                        else if (d == 3) currentTile.west.push(neighbouringTile);
+                    }
+                }
+            
+            }
+        
         }
     }
 
-
+    count++;
     console.log(unique_tiles);
     return unique_tiles;
 }
